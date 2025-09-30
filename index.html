@@ -11,37 +11,67 @@
       <h1>Ta Te Ti</h1>
     </header>
     <main>
-        <div class="container">
-            <section class="tablero">
-                <article class="casilla">
-                    <h2>X</h2>
-                </article>
-                <article class="casilla">
-                    <h2>O</h2>
-                </article>
-                <article class="casilla">
-                    <h2>X</h2>
-                </article>
-                <article class="casilla">
-                    <h2>O</h2>
-                </article>
-                <article class="casilla">
-                    <h2>X</h2>
-                </article>
-                <article class="casilla">
-                    <h2>X</h2>
-                </article>
-                <article class="casilla">
-                    <h2>O</h2>
-                </article>
-                <article class="casilla">
-                    <h2>O</h2>
-                </article>
-                <article class="casilla">
-                    <h2>X</h2>
-                </article>
-            </section>
-        </div>
+      <div class="container">
+        <form action="">
+          <h2>Ingrese los datos</h2>
+          <section class="form-campos">
+            <div class="jugador-uno">
+              <label for="nombre-j1">Jugador 1</label>
+              <input id="nombre-j1" type="text" />
+            </div>
+            <div class="marcador-uno">
+              <label for="marcador-j1">Marcador</label>
+              <input id="marcador-j1" type="text" />
+            </div>
+            <div class="jugador-dos">
+              <label for="nombre-j2">Jugador 2</label>
+              <input id="nombre-j2" type="text" />
+            </div>
+            <div class="marcador-dos">
+              <label for="marcador-j2">Marcador</label>
+              <input id="marcador-j2" type="text" />
+            </div>
+          </section>
+          <button type="submit">Iniciar Juego</button>
+        </form>
+        <hr class="divisor" />
+        <h3>Turno: <span>-</span></h3>
+        <section class="tablero">
+          <article class="casilla">
+            <h2></h2>
+          </article>
+          <article class="casilla">
+            <h2></h2>
+          </article>
+          <article class="casilla">
+            <h2></h2>
+          </article>
+          <article class="casilla">
+            <h2></h2>
+          </article>
+          <article class="casilla">
+            <h2></h2>
+          </article>
+          <article class="casilla">
+            <h2></h2>
+          </article>
+          <article class="casilla">
+            <h2></h2>
+          </article>
+          <article class="casilla">
+            <h2></h2>
+          </article>
+          <article class="casilla">
+            <h2></h2>
+          </article>
+        </section>
+        <hr class="divisor" />
+        <h3>Resultado: <span>-</span></h3>
+        <section class="btns-controles">
+          <button>Reiniciar Juego</button>
+          <button>Jugar otra partida</button>
+        </section>
+      </div>
     </main>
     <script src="app.js"></script>
   </body>
