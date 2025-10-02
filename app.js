@@ -106,41 +106,181 @@ const tablero = (function () {
     console.log("----------------");
   };
 
+  const crearTablaDisplay = () => {
+    return [...tabla[0], ...tabla[1], ...tabla[2]];
+  };
+
   return {
     mostrarTablero,
     agregarJugada,
     exiteGanador,
+    crearTablaDisplay,
   };
 })();
 
 function createPlayer(nombre, forma, estado) {
-  let fila = "";
-  let columna = "";
 
   const getNombre = () => nombre;
+  const getMarcador = () => forma;
   const getEstado = () => estado;
   const setNombre = (nuevoNombre) => (nombre = nuevoNombre);
   const setEstado = () => (estado = !estado);
 
-  function random() {
-    return Math.floor(Math.random() * 3);
-  }
-
-  const hacerJugada = () => {
-    fila = random();
-    columna = random();
+  const hacerJugada = (fila, columna) => {
+    //fila = random();
+    //columna = random();
     return [fila, columna, forma];
   };
 
-  return { getNombre, getEstado, setNombre, setEstado, hacerJugada };
+  return {
+    getNombre,
+    getEstado,
+    getMarcador,
+    setNombre,
+    setEstado,
+    hacerJugada,
+  };
 }
 
-const juan = createPlayer("juan", "x", true);
-const pedro = createPlayer("pedro", "o", false);
+const controlarDisplay = (function () {
+  const $tablero = document.querySelector(".tablero");
+  const $templateCasilla = document.getElementById("template-casilla").content;
+  const $fragment = document.createDocumentFragment();
+  const $turnoJugador = document.querySelector("[data-turno]");
+  const $jugadorGanador = document.querySelector("[data-ganador]");
+  const $form = document.getElementById("form");
+  const $sectorJuego = document.querySelector(".sector-juego");
 
-const flujoJuego = (function (jugadorUno, jugadorDos, tablero) {
-  const jugarTurno = (jugador) => {
-    return tablero.agregarJugada(...jugador.hacerJugada());
+  const crearHtmlTablero = (container, template, fragment, arr) => {
+    arr.forEach((el, i) => {
+      let fila;
+      let columna;
+
+      switch (i) {
+        case 0:
+          fila = 0;
+          columna = 0;
+          break;
+        case 1:
+          fila = 0;
+          columna = 1;
+          break;
+        case 2:
+          fila = 0;
+          columna = 2;
+          break;
+        case 3:
+          fila = 1;
+          columna = 0;
+          break;
+        case 4:
+          fila = 1;
+          columna = 1;
+          break;
+        case 5:
+          fila = 1;
+          columna = 2;
+          break;
+        case 6:
+          fila = 2;
+          columna = 0;
+          break;
+        case 7:
+          fila = 2;
+          columna = 1;
+          break;
+        case 8:
+          fila = 2;
+          columna = 2;
+          break;
+
+        default:
+          break;
+      }
+      template.querySelector("article").dataset.fila = fila;
+      template.querySelector("article").dataset.columna = columna;
+      template.querySelector("h2").textContent = el;
+      let clone = template.cloneNode(true);
+      fragment.appendChild(clone);
+    });
+    container.appendChild(fragment);
+  };
+
+  const actualizarTurnoJugador = () => {
+    //console.log($turnoJugador)
+    let turno = flujoJuego.seleccionarJugador();
+    $turnoJugador.textContent = turno.getNombre().toUpperCase();
+  };
+
+  const anunciarGanador = () => {
+    $jugadorGanador.textContent = `El Ganador es `;
+  };
+
+  const renderTablero = () => {
+    crearHtmlTablero(
+      $tablero,
+      $templateCasilla,
+      $fragment,
+      tablero.crearTablaDisplay()
+    );
+  };
+
+  const limpiarTabla = () => {
+    $tablero.innerHTML = "";
+  };
+
+  return {
+    renderTablero,
+    limpiarTabla,
+    actualizarTurnoJugador,
+    anunciarGanador,
+    $form,
+    $sectorJuego,
+  };
+})();
+
+const flujoJuego = (function () {
+  let jugadorUno;
+  let jugadorDos;
+
+  function submit(e) {
+    e.preventDefault(); // Evita el envío tradicional del formulario
+
+    // 1. Crear un objeto FormData desde el formulario
+    const formData = new FormData(this); // 'this' se refiere al formulario
+
+    jugadorUno = createPlayer(
+      formData.get("nombre-j1"),
+      formData.get("marcador-j1"),
+      true
+    );
+    jugadorDos = createPlayer(
+      formData.get("nombre-j2"),
+      formData.get("marcador-j2"),
+      false
+    );
+
+    controlarDisplay.$sectorJuego.classList.remove("d-none");
+  }
+
+  controlarDisplay.$form.addEventListener("submit", submit);
+
+  function click(e) {
+    if (e.target.classList.contains("casilla")) {
+      console.log(tablero.mostrarTablero());
+      console.log(jugadorUno.getEstado())
+      console.log(jugadorDos.getEstado())
+      jugarPartida(e.target.dataset.fila, e.target.dataset.columna);
+      controlarDisplay.limpiarTabla()
+      controlarDisplay.renderTablero();
+      console.log(tablero.mostrarTablero());
+    }
+  }
+
+  document.addEventListener("click", click);
+
+  const jugarTurno = (jugador, fila, columna) => {
+    return tablero.agregarJugada(...jugador.hacerJugada(fila, columna));
   };
 
   const seleccionarJugador = () => {
@@ -156,24 +296,24 @@ const flujoJuego = (function (jugadorUno, jugadorDos, tablero) {
     jugadorDos.setEstado();
   };
 
-  const repetirTurno = (jugador) => {
-    let condicion = jugarTurno(jugador);
+  const repetirTurno = (jugador, fila, columna) => {
+    let condicion = jugarTurno(jugador, fila, columna);
 
     while (!condicion) {
-      condicion = jugarTurno(jugador);
+      condicion = jugarTurno(jugador, fila, columna);
     }
 
     return condicion;
   };
 
-  const jugarPartida = () => {
+  const jugarPartida = (fila, columna) => {
     let jugadorEnTurno = seleccionarJugador();
-    console.log(jugadorEnTurno.getNombre());
+    //console.log(jugadorEnTurno);
 
-    if (jugarTurno(jugadorEnTurno)) {
+    if (jugarTurno(jugadorEnTurno, fila, columna)) {
       cambiarTurno();
     } else {
-      if (repetirTurno(jugadorEnTurno)) {
+      if (repetirTurno(jugadorEnTurno, fila, columna)) {
         cambiarTurno();
       }
     }
@@ -190,10 +330,8 @@ const flujoJuego = (function (jugadorUno, jugadorDos, tablero) {
   return {
     jugarPartida,
     verificarJuego,
+    seleccionarJugador,
   };
-})(juan, pedro, tablero);
+})();
 
-//tablero.mostrarTablero();
-flujoJuego.jugarPartida();
-tablero.mostrarTablero();
-flujoJuego.verificarJuego();
+console.log(controlarDisplay.renderTablero());
