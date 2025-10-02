@@ -124,6 +124,15 @@ main span {
   cursor: pointer;
   font-size: 1.75rem;
 }
+.casilla-disable {
+  color: #222;
+  background-color: rgb(201, 201, 201);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  font-size: 1.75rem;
+}
 
 .btns-controles {
   display: flex;

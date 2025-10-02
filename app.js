@@ -1,5 +1,5 @@
 const tablero = (function () {
-  const tabla = [
+  let tabla = [
     ["", "", ""],
     ["", "", ""],
     ["", "", ""],
@@ -110,25 +110,37 @@ const tablero = (function () {
     return [...tabla[0], ...tabla[1], ...tabla[2]];
   };
 
+  const reiniciarTabla = () => {
+    tabla = [
+      ["", "", ""],
+      ["", "", ""],
+      ["", "", ""],
+    ];
+  };
+
   return {
     mostrarTablero,
     agregarJugada,
     exiteGanador,
     crearTablaDisplay,
+    reiniciarTabla,
   };
 })();
 
 function createPlayer(nombre, forma, estado) {
-
   const getNombre = () => nombre;
   const getMarcador = () => forma;
   const getEstado = () => estado;
   const setNombre = (nuevoNombre) => (nombre = nuevoNombre);
-  const setEstado = () => (estado = !estado);
+  const setEstado = (nuevoEstado) => {
+    if (typeof nuevoEstado === "boolean") {
+      estado = nuevoEstado;
+    } else {
+      estado = !estado;
+    }
+  };
 
   const hacerJugada = (fila, columna) => {
-    //fila = random();
-    //columna = random();
     return [fila, columna, forma];
   };
 
@@ -150,6 +162,7 @@ const controlarDisplay = (function () {
   const $jugadorGanador = document.querySelector("[data-ganador]");
   const $form = document.getElementById("form");
   const $sectorJuego = document.querySelector(".sector-juego");
+  const $btnFormulario = document.querySelector("[type=submit]");
 
   const crearHtmlTablero = (container, template, fragment, arr) => {
     arr.forEach((el, i) => {
@@ -206,14 +219,44 @@ const controlarDisplay = (function () {
     container.appendChild(fragment);
   };
 
-  const actualizarTurnoJugador = () => {
+  const actualizarTurnoJugador = (string) => {
     //console.log($turnoJugador)
+    $turnoJugador.textContent = "";
     let turno = flujoJuego.seleccionarJugador();
-    $turnoJugador.textContent = turno.getNombre().toUpperCase();
+    $turnoJugador.textContent = string || turno.getNombre().toUpperCase();
   };
 
-  const anunciarGanador = () => {
-    $jugadorGanador.textContent = `El Ganador es `;
+  const anunciarGanador = (ganador) => {
+    $jugadorGanador.textContent = `El Ganador es ${ganador.getNombre()}`;
+  };
+
+  const actualizarResultado = () => {
+    $jugadorGanador.textContent = "-";
+  };
+
+  const desabilitarCasillas = () => {
+    const $casillas = document.querySelectorAll(".casilla");
+    $casillas.forEach((el) => {
+      el.classList.remove("casilla");
+      el.classList.add("casilla-disable");
+    });
+  };
+  const habilitarCasillas = () => {
+    const $casillas = document.querySelectorAll(".casilla");
+    console.log($casillas);
+    $casillas.forEach((el) => {
+      el.classList.remove("casilla-disable");
+      el.classList.add("casilla");
+    });
+  };
+
+  const desabilitarFormulario = () => {
+    $form.reset();
+    const $elementosFormularios = $form.querySelectorAll("input");
+    $elementosFormularios.forEach((el) => {
+      el.disabled = true;
+    });
+    $btnFormulario.disabled = true;
   };
 
   const renderTablero = () => {
@@ -233,7 +276,11 @@ const controlarDisplay = (function () {
     renderTablero,
     limpiarTabla,
     actualizarTurnoJugador,
+    actualizarResultado,
     anunciarGanador,
+    desabilitarCasillas,
+    habilitarCasillas,
+    desabilitarFormulario,
     $form,
     $sectorJuego,
   };
@@ -244,10 +291,9 @@ const flujoJuego = (function () {
   let jugadorDos;
 
   function submit(e) {
-    e.preventDefault(); // Evita el envío tradicional del formulario
+    e.preventDefault();
 
-    // 1. Crear un objeto FormData desde el formulario
-    const formData = new FormData(this); // 'this' se refiere al formulario
+    const formData = new FormData(this);
 
     jugadorUno = createPlayer(
       formData.get("nombre-j1"),
@@ -260,6 +306,9 @@ const flujoJuego = (function () {
       false
     );
 
+    controlarDisplay.desabilitarFormulario();
+    controlarDisplay.renderTablero();
+    controlarDisplay.actualizarTurnoJugador();
     controlarDisplay.$sectorJuego.classList.remove("d-none");
   }
 
@@ -267,13 +316,33 @@ const flujoJuego = (function () {
 
   function click(e) {
     if (e.target.classList.contains("casilla")) {
-      console.log(tablero.mostrarTablero());
-      console.log(jugadorUno.getEstado())
-      console.log(jugadorDos.getEstado())
+      let jugadorEnTurno = seleccionarJugador();
       jugarPartida(e.target.dataset.fila, e.target.dataset.columna);
-      controlarDisplay.limpiarTabla()
+      controlarDisplay.actualizarTurnoJugador();
+      controlarDisplay.limpiarTabla();
       controlarDisplay.renderTablero();
-      console.log(tablero.mostrarTablero());
+      if (verificarJuego()) {
+        controlarDisplay.actualizarTurnoJugador("-");
+        controlarDisplay.anunciarGanador(jugadorEnTurno);
+        controlarDisplay.desabilitarCasillas();
+      }
+    }
+
+    if (e.target.classList.contains("btn-juego-nuevo")) {
+      //reiniciar tabla a valores vacios
+      tablero.reiniciarTabla();
+      //cambiar estados de jugadores a inicial
+      jugadorUno.setEstado(true);
+      jugadorDos.setEstado(false);
+
+      //actualizar el mensaje de turno
+      controlarDisplay.actualizarTurnoJugador();
+      //cambiar el mensaje de resultado
+      controlarDisplay.actualizarResultado();
+
+      //habilitar el tablero a inicio
+      controlarDisplay.limpiarTabla();
+      controlarDisplay.renderTablero();
     }
   }
 
@@ -321,9 +390,9 @@ const flujoJuego = (function () {
 
   const verificarJuego = () => {
     if (tablero.exiteGanador()) {
-      console.log("HAY UN GANADOR");
+      return true;
     } else {
-      console.log("SIGUIENTE TURNO");
+      return false;
     }
   };
 
@@ -333,5 +402,3 @@ const flujoJuego = (function () {
     seleccionarJugador,
   };
 })();
-
-console.log(controlarDisplay.renderTablero());
