@@ -227,7 +227,11 @@ const controlarDisplay = (function () {
   };
 
   const anunciarGanador = (ganador) => {
-    $jugadorGanador.textContent = `El Ganador es ${ganador.getNombre()}`;
+    if (ganador === "empate") {
+      $jugadorGanador.textContent = `Fue un empate`;
+    } else {
+      $jugadorGanador.textContent = `El Ganador es ${ganador.getNombre()}`;
+    }
   };
 
   const actualizarResultado = () => {
@@ -259,6 +263,14 @@ const controlarDisplay = (function () {
     $btnFormulario.disabled = true;
   };
 
+  const habilitarFormulario = () => {
+    const $elementosFormularios = $form.querySelectorAll("input");
+    $elementosFormularios.forEach((el) => {
+      el.disabled = false;
+    });
+    $btnFormulario.disabled = false;
+  };
+
   const renderTablero = () => {
     crearHtmlTablero(
       $tablero,
@@ -281,6 +293,7 @@ const controlarDisplay = (function () {
     desabilitarCasillas,
     habilitarCasillas,
     desabilitarFormulario,
+    habilitarFormulario,
     $form,
     $sectorJuego,
   };
@@ -307,6 +320,7 @@ const flujoJuego = (function () {
     );
 
     controlarDisplay.desabilitarFormulario();
+    controlarDisplay.limpiarTabla();
     controlarDisplay.renderTablero();
     controlarDisplay.actualizarTurnoJugador();
     controlarDisplay.$sectorJuego.classList.remove("d-none");
@@ -314,35 +328,53 @@ const flujoJuego = (function () {
 
   controlarDisplay.$form.addEventListener("submit", submit);
 
+  const clickCasillas = (target) => {
+    console.log(tablero.mostrarTablero())
+    let jugadorEnTurno = seleccionarJugador();
+    jugarPartida(target.dataset.fila, target.dataset.columna);
+    controlarDisplay.actualizarTurnoJugador();
+    controlarDisplay.limpiarTabla();
+    controlarDisplay.renderTablero();
+    if (verificarJuego()) {
+      controlarDisplay.actualizarTurnoJugador("-");
+      controlarDisplay.anunciarGanador(jugadorEnTurno);
+      controlarDisplay.desabilitarCasillas();
+    } else if (verificarEmpate()) {
+      controlarDisplay.actualizarTurnoJugador("-");
+      controlarDisplay.anunciarGanador("empate");
+      controlarDisplay.desabilitarCasillas();
+    }
+  };
+
+  const clickBtnJuegoNuevo = () => {
+    //reiniciar tabla a valores vacios
+    tablero.reiniciarTabla();
+    //cambiar estados de jugadores a inicial
+    jugadorUno.setEstado(true);
+    jugadorDos.setEstado(false);
+
+    //actualizar el mensaje de turno
+    controlarDisplay.actualizarTurnoJugador();
+    //cambiar el mensaje de resultado
+    controlarDisplay.actualizarResultado();
+
+    //habilitar el tablero a inicio
+    controlarDisplay.limpiarTabla();
+    controlarDisplay.renderTablero();
+  };
+
   function click(e) {
     if (e.target.classList.contains("casilla")) {
-      let jugadorEnTurno = seleccionarJugador();
-      jugarPartida(e.target.dataset.fila, e.target.dataset.columna);
-      controlarDisplay.actualizarTurnoJugador();
-      controlarDisplay.limpiarTabla();
-      controlarDisplay.renderTablero();
-      if (verificarJuego()) {
-        controlarDisplay.actualizarTurnoJugador("-");
-        controlarDisplay.anunciarGanador(jugadorEnTurno);
-        controlarDisplay.desabilitarCasillas();
-      }
+      clickCasillas(e.target);
     }
 
     if (e.target.classList.contains("btn-juego-nuevo")) {
-      //reiniciar tabla a valores vacios
-      tablero.reiniciarTabla();
-      //cambiar estados de jugadores a inicial
-      jugadorUno.setEstado(true);
-      jugadorDos.setEstado(false);
-
-      //actualizar el mensaje de turno
-      controlarDisplay.actualizarTurnoJugador();
-      //cambiar el mensaje de resultado
-      controlarDisplay.actualizarResultado();
-
-      //habilitar el tablero a inicio
-      controlarDisplay.limpiarTabla();
-      controlarDisplay.renderTablero();
+      clickBtnJuegoNuevo();
+    }
+    if (e.target.classList.contains("btn-reiniciar-juego")) {
+      clickBtnJuegoNuevo();
+      controlarDisplay.habilitarFormulario();
+      controlarDisplay.$sectorJuego.classList.add("d-none");
     }
   }
 
@@ -367,7 +399,7 @@ const flujoJuego = (function () {
 
   const repetirTurno = (jugador, fila, columna) => {
     let condicion = jugarTurno(jugador, fila, columna);
-
+    //Hay un error que activa un bucle infinito, debe ser porque antes usaba numeros al azar en cambio ahora se deberia dar por medio de un click en pantalla
     while (!condicion) {
       condicion = jugarTurno(jugador, fila, columna);
     }
@@ -377,7 +409,6 @@ const flujoJuego = (function () {
 
   const jugarPartida = (fila, columna) => {
     let jugadorEnTurno = seleccionarJugador();
-    //console.log(jugadorEnTurno);
 
     if (jugarTurno(jugadorEnTurno, fila, columna)) {
       cambiarTurno();
@@ -396,9 +427,21 @@ const flujoJuego = (function () {
     }
   };
 
+  const verificarEmpate = () => {
+    if (tablero.crearTablaDisplay().every(Boolean)) {
+      //llamar a hubo empate
+      return true;
+    } else {
+      return false;
+    }
+  };
+
   return {
     jugarPartida,
     verificarJuego,
     seleccionarJugador,
+    verificarEmpate,
   };
 })();
+
+flujoJuego.verificarEmpate();
