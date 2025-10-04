@@ -310,12 +310,12 @@ const flujoJuego = (function () {
 
     jugadorUno = createPlayer(
       formData.get("nombre-j1"),
-      formData.get("marcador-j1"),
+      formData.get("marcador-j1").charAt(0).toUpperCase(),
       true
     );
     jugadorDos = createPlayer(
       formData.get("nombre-j2"),
-      formData.get("marcador-j2"),
+      formData.get("marcador-j2").charAt(0).toUpperCase(),
       false
     );
 
@@ -329,7 +329,6 @@ const flujoJuego = (function () {
   controlarDisplay.$form.addEventListener("submit", submit);
 
   const clickCasillas = (target) => {
-    console.log(tablero.mostrarTablero())
     let jugadorEnTurno = seleccionarJugador();
     jugarPartida(target.dataset.fila, target.dataset.columna);
     controlarDisplay.actualizarTurnoJugador();
@@ -397,26 +396,12 @@ const flujoJuego = (function () {
     jugadorDos.setEstado();
   };
 
-  const repetirTurno = (jugador, fila, columna) => {
-    let condicion = jugarTurno(jugador, fila, columna);
-    //Hay un error que activa un bucle infinito, debe ser porque antes usaba numeros al azar en cambio ahora se deberia dar por medio de un click en pantalla
-    while (!condicion) {
-      condicion = jugarTurno(jugador, fila, columna);
-    }
-
-    return condicion;
-  };
-
   const jugarPartida = (fila, columna) => {
     let jugadorEnTurno = seleccionarJugador();
 
     if (jugarTurno(jugadorEnTurno, fila, columna)) {
       cambiarTurno();
-    } else {
-      if (repetirTurno(jugadorEnTurno, fila, columna)) {
-        cambiarTurno();
-      }
-    }
+    } 
   };
 
   const verificarJuego = () => {
@@ -429,7 +414,6 @@ const flujoJuego = (function () {
 
   const verificarEmpate = () => {
     if (tablero.crearTablaDisplay().every(Boolean)) {
-      //llamar a hubo empate
       return true;
     } else {
       return false;
@@ -444,4 +428,3 @@ const flujoJuego = (function () {
   };
 })();
 
-flujoJuego.verificarEmpate();
